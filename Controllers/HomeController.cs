@@ -6,16 +6,18 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Marton_Robert_Lab2master.Models;
+using Microsoft.EntityFrameworkCore;
+using Marton_Robert_Lab2master.Data;
+using Marton_Robert_Lab2master.Models.LibraryViewModels;
 
 namespace Marton_Robert_Lab2master.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
+        private readonly LibraryContext _context;
+        public HomeController(LibraryContext context)
         {
-            _logger = logger;
+            _context = context;
         }
 
         public IActionResult Index()
@@ -26,6 +28,18 @@ namespace Marton_Robert_Lab2master.Controllers
         public IActionResult Privacy()
         {
             return View();
+        }
+        public async Task<ActionResult> Statistics()
+        {
+            IQueryable<OrderGroup> data =
+            from order in _context.Orders
+            group order by order.OrderDate into dateGroup
+            select new OrderGroup()
+            {
+                OrderDate = dateGroup.Key,
+                BookCount = dateGroup.Count()
+            };
+            return View(await data.AsNoTracking().ToListAsync());
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
